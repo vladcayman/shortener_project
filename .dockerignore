@@ -1,0 +1,27 @@
+# venv
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE junk
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# PyCharm project files
+*.iml
+
+# Git folder
+.git/
+.gitignore

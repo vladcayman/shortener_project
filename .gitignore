@@ -1,0 +1,35 @@
+### Python ###
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.log
+
+### Django ###
+db.sqlite3
+media/
+static/
+
+### Environments ###
+venv/
+.venv/
+env/
+ENV/
+
+### PyCharm ###
+.idea/
+*.iml
+
+### Docker ###
+/data/
+/volumes/
+*.pid
+
+### OS junk ###
+.DS_Store
+Thumbs.db
+
+### Misc ###
+*.lock

@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: shortener_web
+    command: uv run python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=shortener
+      - DB_USER=shortener_user
+      - DB_PASSWORD=shortener_pass
+      - DB_HOST=db
+      - DB_PORT=5432
+
+  db:
+    image: postgres:15
+    container_name: shortener_db
+    restart: always
+    environment:
+      POSTGRES_DB: shortener
+      POSTGRES_USER: shortener_user
+      POSTGRES_PASSWORD: shortener_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Сервис коротких ссылок</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            max-width: 800px;
+            width: 100%;
+            padding: 24px 16px 40px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #9ca3af;
+        }
+
+        .card {
+            background: #020617;
+            border-radius: 16px;
+            padding: 20px 18px 18px;
+            box-shadow: 0 18px 40px rgba(15,23,42,0.75);
+            border: 1px solid rgba(148,163,184,0.15);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.65);
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6366f1, #22c55e);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .error {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #f97373;
+        }
+
+        .result {
+            margin-top: 18px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(15,118,110,0.25);
+            border: 1px solid rgba(45,212,191,0.4);
+            font-size: 14px;
+        }
+
+        .result a {
+            color: #22c55e;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+
+        .list-title {
+            margin-top: 24px;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+
+        .links-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .links-list li {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(31,41,55,0.8);
+        }
+
+        .links-list small {
+            color: #9ca3af;
+        }
+
+        @media (min-width: 768px) {
+            .card { padding: 24px 22px 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <h1>Сервис коротких ссылок</h1>
+    <p class="subtitle">
+        Вставьте длинный URL — и получите аккуратную короткую ссылку вида <code>/r/ABC123</code>.
+    </p>
+
+    <div class="card">
+        <form id="shorten-form">
+            <div class="field">
+                <label for="original-url">Длинная ссылка</label>
+                <input id="original-url"
+                       type="text"
+                       required
+                       placeholder="https://example.com/my-long-url">
+            </div>
+
+            <div class="field">
+                <label for="title">Название ссылки (по желанию)</label>
+                <input id="title"
+                       type="text"
+                       placeholder="Название короткой ссылки">
+            </div>
+
+            <div class="actions">
+                <button type="submit" id="submit-btn">Создать короткую ссылку</button>
+            </div>
+
+            <div id="error" class="error" style="display:none;"></div>
+            <div id="result" class="result" style="display:none;"></div>
+        </form>
+
+        <div id="history-block" style="display:none;">
+            <div class="list-title">Последние созданные ссылки за эту сессию:</div>
+            <ul id="history-list" class="links-list"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('shorten-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const errorBox = document.getElementById('error');
+    const resultBox = document.getElementById('result');
+    const historyBlock = document.getElementById('history-block');
+    const historyList = document.getElementById('history-list');
+
+    const BASE_URL = ""; // тот же домен, где у нас Django (localhost:8000)
+
+    function showError(message) {
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+    }
+
+    function clearError() {
+        errorBox.textContent = "";
+        errorBox.style.display = 'none';
+    }
+
+    function addToHistory(original, shortUrl, title) {
+        historyBlock.style.display = 'block';
+        const li = document.createElement('li');
+
+        li.innerHTML =
+            '<a href="' + shortUrl + '" target="_blank">' +
+                shortUrl +
+            '</a>' +
+            '<br><small>' + (title ? "«" + title + "» — " : "") + original + '</small>';
+
+        historyList.prepend(li);
+    }
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearError();
+        resultBox.style.display = 'none';
+
+        const originalUrl = document.getElementById('original-url').value.trim();
+        const title = document.getElementById('title').value.trim();
+
+        if (!originalUrl) {
+            showError("Введите ссылку.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Создаём...";
+
+        try {
+            const resp = await fetch(BASE_URL + "/api/v1/shorten/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    original_url: originalUrl,
+                    title: title || ""
+                })
+            });
+
+            if (!resp.ok) {
+                let text = "Ошибка " + resp.status;
+                try {
+                    const data = await resp.json();
+                    if (data && typeof data === "object") {
+                        text += ": " + JSON.stringify(data);
+                    }
+                } catch (_) {}
+                throw new Error(text);
+            }
+
+            const data = await resp.json();
+            // backend отдает short_url вида "/r/AbCd12/"
+            const shortPath = data.short_url || "/r/" + (data.short_code || "") + "/";
+            const fullShortUrl = window.location.origin + shortPath;
+
+            resultBox.innerHTML =
+                'Готово! Ваша короткая ссылка: ' +
+                '<a href="' + fullShortUrl + '" target="_blank" rel="noopener">' +
+                fullShortUrl +
+                '</a>';
+            resultBox.style.display = 'block';
+
+            addToHistory(originalUrl, fullShortUrl, title);
+        } catch (err) {
+            console.error(err);
+            showError(err.message || "Что-то пошло не так");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Создать короткую ссылку";
+        }
+    });
+</script>
+</body>
+</html>
