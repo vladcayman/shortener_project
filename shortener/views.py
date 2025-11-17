@@ -151,7 +151,8 @@ class FrontendView(TemplateView):
 @login_required
 def my_links_view(request):
     links = (
-        Link.objects.all()
+        Link.objects
+        .filter(owner=request.user)
         .select_related("category")
         .prefetch_related("tags")
         .order_by("-created_at")
