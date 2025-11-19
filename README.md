@@ -37,11 +37,11 @@
 ```
 shortener_project/
 │
-├── shortener/                         # Приложение Django
-│   ├── api/                           # Пакет API (DRF)
+├── shortener/                          # Приложение Django
+│   ├── api/                            # Пакет API (DRF)
 │   │   ├── __init__.py                
-│   │   ├── urls.py                    # URL-маршруты REST API v1
-│   │   └── views.py                   # ViewSet'ы и публичный API + кэш популярных ссылок
+│   │   ├── urls.py                     # URL-маршруты REST API v1
+│   │   └── views.py                    # ViewSet'ы и публичный API + кэш популярных ссылок
 │   │
 │   ├── migrations/                     # Миграции БД
 │   ├── templates/                      # HTML-шаблоны (Frontend)
